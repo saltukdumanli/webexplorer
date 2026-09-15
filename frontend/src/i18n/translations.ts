@@ -164,6 +164,9 @@ export const translations = {
     noTransactions: 'Henüz bir dosya manipülasyon transaction\'ı kaydedilmedi.',
     searchTransactionsPlaceholder: 'İşlem geçmişinde ara (öğe adı, yol, detay)...',
     maxRecordsNotice: 'En fazla 1000 kayıt gösterilir',
+    openModalDemo: 'Tam Ekran Modalda Aç',
+    openModalFor: 'Modal Aç:',
+    lastTabWarning: 'Son açık sekmeyi kapatamazsınız.',
   },
 
   en: {
@@ -324,6 +327,9 @@ export const translations = {
     noTransactions: 'No file manipulation transactions recorded yet.',
     searchTransactionsPlaceholder: 'Search transaction history (item, path, details)...',
     maxRecordsNotice: 'Shows maximum 1000 records',
+    openModalDemo: 'Open Fullscreen Modal',
+    openModalFor: 'Open Modal:',
+    lastTabWarning: 'You cannot close the last remaining tab.',
   },
 };
 

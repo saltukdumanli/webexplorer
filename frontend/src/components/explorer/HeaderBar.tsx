@@ -13,22 +13,27 @@ import {
   ReloadOutlined,
   HistoryOutlined,
   TranslationOutlined,
+  CloseOutlined,
 } from '@ant-design/icons';
 import { ServerNode } from '@/types/explorer';
 import { useI18n } from '@/i18n/LanguageContext';
 
 const { Title, Text } = Typography;
 
-interface HeaderBarProps {
+export interface HeaderBarProps {
   activeServer?: ServerNode;
   onRefresh: () => void;
   onOpenTransactions: () => void;
+  onClose?: () => void;
+  showCloseButton?: boolean;
 }
 
 export const HeaderBar: React.FC<HeaderBarProps> = ({
   activeServer,
   onRefresh,
   onOpenTransactions,
+  onClose,
+  showCloseButton = false,
 }) => {
   const { language, setLanguage, t } = useI18n();
 
@@ -129,6 +134,18 @@ export const HeaderBar: React.FC<HeaderBarProps> = ({
             {t('refresh')}
           </Button>
         </Tooltip>
+
+        {showCloseButton && onClose && (
+          <Button
+            id="btn-header-close-modal"
+            type="primary"
+            danger
+            icon={<CloseOutlined />}
+            onClick={onClose}
+          >
+            {t('closeBtn')}
+          </Button>
+        )}
       </Space>
     </header>
   );

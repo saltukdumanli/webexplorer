@@ -32,6 +32,22 @@ public class InMemoryExplorerService : IExplorerService
         },
         new ServerDto
         {
+            ServerCode = "srv-db-01",
+            Name = "PROD-DB-01",
+            Host = "192.168.1.15",
+            Status = "Online",
+            RootPath = "D:/database"
+        },
+        new ServerDto
+        {
+            ServerCode = "srv-dev-01",
+            Name = "DEV-STAGE-01",
+            Host = "192.168.1.50",
+            Status = "Online",
+            RootPath = "C:/stage"
+        },
+        new ServerDto
+        {
             ServerCode = "srv-storage-02",
             Name = "STORAGE-NAS-02",
             Host = "192.168.1.20",
@@ -187,6 +203,21 @@ public class InMemoryExplorerService : IExplorerService
         AddItem("srv-prod-01", "C:/app/frontend/next.config.js", "next.config.js", false, 512, "module.exports = { reactStrictMode: true };");
         AddItem("srv-prod-01", "C:/app/logs", "logs", true);
         AddItem("srv-prod-01", "C:/app/logs/access.log", "access.log", false, 1048576, "2026-09-15 10:00:01 GET / 200 OK\n2026-09-15 10:00:05 GET /api/explorer/servers 200 OK");
+
+        // srv-db-01 (Root: D:/database)
+        AddItem("srv-db-01", "D:/database/data", "data", true);
+        AddItem("srv-db-01", "D:/database/data/master.mdf", "master.mdf", false, 104857600);
+        AddItem("srv-db-01", "D:/database/data/app_primary.mdf", "app_primary.mdf", false, 524288000);
+        AddItem("srv-db-01", "D:/database/logs", "logs", true);
+        AddItem("srv-db-01", "D:/database/logs/errorlog.txt", "errorlog.txt", false, 124500, "SQL Server is ready for client connections.");
+        AddItem("srv-db-01", "D:/database/backups", "backups", true);
+        AddItem("srv-db-01", "D:/database/backups/full_backup.bak", "full_backup.bak", false, 209715200);
+
+        // srv-dev-01 (Root: C:/stage)
+        AddItem("srv-dev-01", "C:/stage/app", "app", true);
+        AddItem("srv-dev-01", "C:/stage/app/server.js", "server.js", false, 2048, "console.log('Stage server running on port 3000');");
+        AddItem("srv-dev-01", "C:/stage/config", "config", true);
+        AddItem("srv-dev-01", "C:/stage/config/stage.env", "stage.env", false, 320, "NODE_ENV=staging\nPORT=3000");
 
         // srv-storage-02 (Root: /var/data)
         AddItem("srv-storage-02", "/var/data/uploads", "uploads", true);
