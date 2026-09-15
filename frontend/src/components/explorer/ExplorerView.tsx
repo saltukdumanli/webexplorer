@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect, useCallback, useTransition, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useTransition, useMemo, useRef } from 'react';
 import { message } from 'antd';
 import { ServerNode, ExplorerItem, BrowseResult, ExplorerTab } from '@/types/explorer';
 import { SearchMode } from '@/utils/searchMatcher';
@@ -271,35 +271,41 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
     }
   }, [isInitialized, activeTabId, activeTab?.serverCode, activeTab?.currentPath, loadDirectory]);
 
-  // Handle runtime changes to defaultServerCode
+  // Track previous defaultServerCode prop so we only react when the prop itself changes from outside
+  const prevDefaultServerRef = useRef(defaultServerCode);
+
   useEffect(() => {
-    if (!isInitialized || servers.length === 0 || !defaultServerCode) return;
+    if (!isInitialized || servers.length === 0) return;
+    if (prevDefaultServerRef.current === defaultServerCode) return;
+
+    prevDefaultServerRef.current = defaultServerCode;
+    if (!defaultServerCode) return;
+
     const found = servers.find(
       (s) =>
         (s.serverCode || s.id || '').toLowerCase() === defaultServerCode.toLowerCase()
     );
-    if (found && found.serverCode.toLowerCase() !== activeTab?.serverCode?.toLowerCase()) {
+
+    if (found) {
       const targetPath = defaultPath || found.rootPath;
-      setTabs([
-        {
-          id: 'tab-1',
-          title: `${found.name} (${targetPath})`,
-          serverCode: found.serverCode || found.id || '',
-          currentPath: targetPath,
-          history: [targetPath],
-          historyIndex: 0,
-          viewMode: 'table',
-          searchQuery: '',
-          filterQuery: '',
-          searchRecursive: false,
-          searchMode: 'auto',
-          matchPath: true,
-          selectedIds: [],
-        },
-      ]);
-      setActiveTabId('tab-1');
+      setTabs((prev) =>
+        prev.map((tItem) =>
+          tItem.id === activeTabId
+            ? {
+                ...tItem,
+                title: `${found.name} (${targetPath})`,
+                serverCode: found.serverCode || found.id || '',
+                currentPath: targetPath,
+                history: [targetPath],
+                historyIndex: 0,
+                searchQuery: '',
+                filterQuery: '',
+              }
+            : tItem
+        )
+      );
     }
-  }, [defaultServerCode, defaultPath, isInitialized, servers, activeTab?.serverCode]);
+  }, [defaultServerCode, defaultPath, isInitialized, servers, activeTabId]);
 
   // Tab Handlers
   const handleTabChange = (key: string) => {
