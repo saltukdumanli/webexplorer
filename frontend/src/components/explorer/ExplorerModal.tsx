@@ -102,13 +102,16 @@ export const ExplorerModal: React.FC<ExplorerModalProps> = ({
         },
       }}
     >
-      <ExplorerView
-        defaultServerCode={defaultServerCode}
-        defaultPath={defaultPath}
-        onClose={onClose}
-        showCloseButton={true}
-        height="100vh"
-      />
+      {open && (
+        <ExplorerView
+          key={`${defaultServerCode || 'default'}_${defaultPath || ''}`}
+          defaultServerCode={defaultServerCode}
+          defaultPath={defaultPath}
+          onClose={onClose}
+          showCloseButton={true}
+          height="100vh"
+        />
+      )}
     </Modal>
   );
 };
