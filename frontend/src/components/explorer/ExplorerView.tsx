@@ -81,18 +81,16 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
   const [allFolders, setAllFolders] = useState<ExplorerItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [treeLoading, setTreeLoading] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
 
   // Tabs
-  const initialServer = defaultServerCode || 'srv-prod-01';
-  const initialPath = defaultPath || 'C:/app';
-
   const [tabs, setTabs] = useState<ExplorerTab[]>([
     {
       id: 'tab-1',
-      title: `${initialServer} (${initialPath})`,
-      serverCode: initialServer,
-      currentPath: initialPath,
-      history: [initialPath],
+      title: 'Explorer',
+      serverCode: defaultServerCode || '',
+      currentPath: defaultPath || '',
+      history: defaultPath ? [defaultPath] : [],
       historyIndex: 0,
       viewMode: 'table',
       searchQuery: '',
@@ -114,7 +112,7 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
 
   // When searchRecursive is active, fetch all server items on UI side
   useEffect(() => {
-    if (!activeTab) return;
+    if (!activeTab || !activeTab.serverCode) return;
     if (activeTab.searchRecursive && activeTab.searchQuery) {
       explorerService.getAllServerItems(activeTab.serverCode).then((items) => {
         setAllServerItems(items);
@@ -169,25 +167,37 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
       }
       setAllFolders(folderList);
 
-      // If defaultServerCode is provided, align the initial tab
-      if (defaultServerCode && serverList.length > 0) {
-        const matched = serverList.find(
+      // Resolve initial server
+      let matched = serverList[0];
+      if (defaultServerCode) {
+        const found = serverList.find(
           (s) =>
             (s.serverCode || s.id || '').toLowerCase() === defaultServerCode.toLowerCase()
         );
-        if (matched) {
-          const targetPath = defaultPath || matched.rootPath;
-          setTabs((prev) => [
-            {
-              ...prev[0],
-              serverCode: matched.serverCode || matched.id || '',
-              currentPath: targetPath,
-              title: `${matched.name} (${targetPath})`,
-              history: [targetPath],
-              historyIndex: 0,
-            },
-          ]);
-        }
+        if (found) matched = found;
+      }
+
+      if (matched) {
+        const targetPath = defaultPath || matched.rootPath;
+        setTabs([
+          {
+            id: 'tab-1',
+            title: `${matched.name} (${targetPath})`,
+            serverCode: matched.serverCode || matched.id || '',
+            currentPath: targetPath,
+            history: [targetPath],
+            historyIndex: 0,
+            viewMode: 'table',
+            searchQuery: '',
+            filterQuery: '',
+            searchRecursive: false,
+            searchMode: 'auto',
+            matchPath: true,
+            selectedIds: [],
+          },
+        ]);
+        setActiveTabId('tab-1');
+        setIsInitialized(true);
       }
     } catch (err: any) {
       message.error(err.message || String(err));
@@ -206,11 +216,19 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
       const safeServerCode =
         serverCode ||
         activeTab?.serverCode ||
-        (activeTab as any)?.serverId ||
         defaultServerCode ||
-        servers[0]?.serverCode ||
-        'srv-prod-01';
-      const safePath = path ?? activeTab?.currentPath ?? defaultPath ?? '';
+        servers[0]?.serverCode;
+
+      if (!safeServerCode) return;
+
+      const srv = servers.find(
+        (s) =>
+          (s.serverCode || s.id || '').toLowerCase() ===
+          safeServerCode.toLowerCase()
+      );
+
+      const safePath = path || activeTab?.currentPath || srv?.rootPath || '';
+      if (!safePath) return;
 
       setLoading(true);
       try {
@@ -218,11 +236,6 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
         setBrowseResult(result);
 
         // Update tab title
-        const srv = servers.find(
-          (s) =>
-            (s.serverCode || s.id || '').toLowerCase() ===
-            (safeServerCode || '').toLowerCase()
-        );
         const folderName =
           result.breadcrumbs.length > 0
             ? result.breadcrumbs[result.breadcrumbs.length - 1].name
@@ -247,20 +260,46 @@ export const ExplorerView: React.FC<ExplorerViewProps> = ({
         setLoading(false);
       }
     },
-    [activeTabId, activeTab?.serverCode, activeTab?.currentPath, defaultServerCode, defaultPath, servers]
+    [activeTabId, activeTab?.serverCode, activeTab?.currentPath, defaultServerCode, servers]
   );
 
+  // Trigger loadDirectory once initialized
   useEffect(() => {
-    if (activeTab) {
-      const code =
-        activeTab.serverCode ||
-        (activeTab as any).serverId ||
-        defaultServerCode ||
-        servers[0]?.serverCode ||
-        'srv-prod-01';
-      loadDirectory(code, activeTab.currentPath);
+    if (!isInitialized) return;
+    if (activeTab && activeTab.serverCode && activeTab.currentPath) {
+      loadDirectory(activeTab.serverCode, activeTab.currentPath);
     }
-  }, [activeTabId, activeTab?.currentPath, activeTab?.serverCode, loadDirectory, defaultServerCode, servers]);
+  }, [isInitialized, activeTabId, activeTab?.serverCode, activeTab?.currentPath, loadDirectory]);
+
+  // Handle runtime changes to defaultServerCode
+  useEffect(() => {
+    if (!isInitialized || servers.length === 0 || !defaultServerCode) return;
+    const found = servers.find(
+      (s) =>
+        (s.serverCode || s.id || '').toLowerCase() === defaultServerCode.toLowerCase()
+    );
+    if (found && found.serverCode.toLowerCase() !== activeTab?.serverCode?.toLowerCase()) {
+      const targetPath = defaultPath || found.rootPath;
+      setTabs([
+        {
+          id: 'tab-1',
+          title: `${found.name} (${targetPath})`,
+          serverCode: found.serverCode || found.id || '',
+          currentPath: targetPath,
+          history: [targetPath],
+          historyIndex: 0,
+          viewMode: 'table',
+          searchQuery: '',
+          filterQuery: '',
+          searchRecursive: false,
+          searchMode: 'auto',
+          matchPath: true,
+          selectedIds: [],
+        },
+      ]);
+      setActiveTabId('tab-1');
+    }
+  }, [defaultServerCode, defaultPath, isInitialized, servers, activeTab?.serverCode]);
 
   // Tab Handlers
   const handleTabChange = (key: string) => {

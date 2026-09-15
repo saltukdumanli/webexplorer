@@ -1,14 +1,16 @@
-﻿/**
+/**
  * [TR] Ana Sayfa (FileExplorerPage): ExplorerView bileşenini doğrudan render eder ve herhangi bir sayfadan modal olarak nasıl çağrılabileceğini gösteren tam ekran modal tetikleyici butonlarını barındırır.
  * [EN] Main Page (FileExplorerPage): Directly renders the ExplorerView component and provides fullscreen modal trigger buttons demonstrating how to call ExplorerModal from any page.
  */
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Space, Button, Typography, Tag } from 'antd';
 import { FullscreenOutlined, CloudServerOutlined } from '@ant-design/icons';
 import { ExplorerView, ExplorerModal } from '@/components/explorer';
+import { explorerService } from '@/services/explorerService';
+import { ServerNode } from '@/types/explorer';
 import { useI18n } from '@/i18n/LanguageContext';
 
 const { Text } = Typography;
@@ -16,14 +18,34 @@ const { Text } = Typography;
 export default function FileExplorerPage() {
   const { t } = useI18n();
 
+  // Servers for demo buttons
+  const [demoServers, setDemoServers] = useState<ServerNode[]>([]);
+
   // Fullscreen Modal State
   const [modalOpen, setModalOpen] = useState(false);
   const [targetServerCode, setTargetServerCode] = useState<string>('srv-prod-01');
+
+  useEffect(() => {
+    explorerService
+      .getServers()
+      .then((list: ServerNode[]) => setDemoServers(list))
+      .catch(() => {});
+  }, []);
 
   const handleOpenModal = (serverCode: string) => {
     setTargetServerCode(serverCode);
     setModalOpen(true);
   };
+
+  const buttonServers =
+    demoServers.length > 0
+      ? demoServers
+      : [
+          { serverCode: 'srv-prod-01', name: 'PROD-APP-01' },
+          { serverCode: 'srv-db-01', name: 'PROD-DB-01' },
+          { serverCode: 'srv-dev-01', name: 'DEV-STAGE-01' },
+          { serverCode: 'srv-storage-02', name: 'STORAGE-NAS-02' },
+        ];
 
   return (
     <main
@@ -50,6 +72,8 @@ export default function FileExplorerPage() {
           fontSize: 12,
           borderBottom: '1px solid #002140',
           zIndex: 10,
+          flexWrap: 'wrap',
+          gap: 8,
         }}
       >
         <Space size={8} align="center">
@@ -61,39 +85,20 @@ export default function FileExplorerPage() {
           </Text>
         </Space>
 
-        <Space size={8}>
-          <Button
-            id="btn-open-modal-prod-app"
-            size="small"
-            type="primary"
-            ghost
-            icon={<FullscreenOutlined />}
-            onClick={() => handleOpenModal('srv-prod-01')}
-          >
-            PROD-APP-01 (srv-prod-01)
-          </Button>
-
-          <Button
-            id="btn-open-modal-prod-db"
-            size="small"
-            type="primary"
-            ghost
-            icon={<FullscreenOutlined />}
-            onClick={() => handleOpenModal('srv-db-01')}
-          >
-            PROD-DB-01 (srv-db-01)
-          </Button>
-
-          <Button
-            id="btn-open-modal-stage"
-            size="small"
-            type="primary"
-            ghost
-            icon={<FullscreenOutlined />}
-            onClick={() => handleOpenModal('srv-dev-01')}
-          >
-            DEV-STAGE-01 (srv-dev-01)
-          </Button>
+        <Space size={8} wrap>
+          {buttonServers.map((s) => (
+            <Button
+              key={s.serverCode}
+              id={`btn-open-modal-${s.serverCode}`}
+              size="small"
+              type="primary"
+              ghost
+              icon={<FullscreenOutlined />}
+              onClick={() => handleOpenModal(s.serverCode)}
+            >
+              {s.name} ({s.serverCode})
+            </Button>
+          ))}
         </Space>
       </div>
 
